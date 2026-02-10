@@ -131,13 +131,22 @@ var combinedPolicy = Policy.WrapAsync(retryPolicy, circuitBreakerPolicy, timeout
 // ============================================
 // HTTP Clients with Polly policies
 // ============================================
-builder.Services.AddHttpClient<WeatherApiClient>()
+builder.Services.AddHttpClient<WeatherApiClient>(client =>
+    {
+        client.DefaultRequestHeaders.Add("User-Agent", "ApiAggregator/1.0");
+    })
     .AddPolicyHandler(combinedPolicy);
 
-builder.Services.AddHttpClient<NewsApiClient>()
+builder.Services.AddHttpClient<NewsApiClient>(client =>
+    {
+        client.DefaultRequestHeaders.Add("User-Agent", "ApiAggregator/1.0");
+    })
     .AddPolicyHandler(combinedPolicy);
 
-builder.Services.AddHttpClient<GitHubApiClient>()
+builder.Services.AddHttpClient<GitHubApiClient>(client =>
+    {
+        client.DefaultRequestHeaders.Add("User-Agent", "ApiAggregator/1.0");
+    })
     .AddPolicyHandler(combinedPolicy);
 
 // ============================================

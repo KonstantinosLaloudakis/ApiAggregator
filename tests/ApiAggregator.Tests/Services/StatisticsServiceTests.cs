@@ -121,7 +121,7 @@ public class StatisticsServiceTests
     }
 
     [Fact]
-    public void RecordRequest_ShouldBeThreadSafe()
+    public async Task RecordRequest_ShouldBeThreadSafe()
     {
         // Arrange
         var tasks = new List<Task>();
@@ -132,11 +132,33 @@ public class StatisticsServiceTests
         {
             tasks.Add(Task.Run(() => _sut.RecordRequest("ConcurrentAPI", 100, true)));
         }
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks);
 
         // Assert
         var stats = _sut.GetApiStatistics("ConcurrentAPI");
         Assert.NotNull(stats);
         Assert.Equal(requestCount, stats.TotalRequests);
+    }
+
+    [Fact]
+    public void RecordRequest_ShouldEvictOldestRecordsWhenLimitExceeded()
+    {
+        // Arrange - exceed the sliding window limit
+        var totalRecords = StatisticsService.MaxRecordsPerApi + 100;
+
+        // Act
+        for (int i = 0; i < totalRecords; i++)
+        {
+            _sut.RecordRequest("BoundedAPI", i, true);
+        }
+
+        // Assert - only the most recent MaxRecordsPerApi records should remain
+        var stats = _sut.GetApiStatistics("BoundedAPI");
+        Assert.NotNull(stats);
+        Assert.Equal(StatisticsService.MaxRecordsPerApi, stats.TotalRequests);
+
+        // The average should reflect only the last 1000 records (values 100..1099)
+        var expectedAvg = Math.Round(Enumerable.Range(100, StatisticsService.MaxRecordsPerApi).Average(), 2);
+        Assert.Equal(expectedAvg, stats.AverageResponseTimeMs);
     }
 }

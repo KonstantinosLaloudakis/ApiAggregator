@@ -5,17 +5,24 @@ using ApiAggregator.Api.Services.Interfaces;
 namespace ApiAggregator.Api.Services;
 
 /// <summary>
-/// Thread-safe service for tracking API request statistics
-/// Uses ConcurrentDictionary for thread-safe operations
+/// Thread-safe service for tracking API request statistics.
+/// Uses a sliding window (bounded ConcurrentQueue) per API to prevent
+/// unbounded memory growth while retaining recent data for statistics.
 /// </summary>
 public class StatisticsService : IStatisticsService
 {
-    private readonly ConcurrentDictionary<string, ConcurrentBag<RequestRecord>> _requests = new();
+    private readonly ConcurrentDictionary<string, ConcurrentQueue<RequestRecord>> _requests = new();
     private readonly ILogger<StatisticsService> _logger;
 
     // Performance bucket thresholds (in milliseconds)
     private const double FastThreshold = 100;
     private const double AverageThreshold = 200;
+
+    /// <summary>
+    /// Maximum number of request records kept per API.
+    /// Oldest records are evicted once this limit is reached.
+    /// </summary>
+    public const int MaxRecordsPerApi = 1000;
 
     public StatisticsService(ILogger<StatisticsService> logger)
     {
@@ -23,7 +30,8 @@ public class StatisticsService : IStatisticsService
     }
 
     /// <summary>
-    /// Records a request to an external API (thread-safe)
+    /// Records a request to an external API (thread-safe).
+    /// Evicts the oldest records when the sliding window limit is exceeded.
     /// </summary>
     public void RecordRequest(string apiName, double responseTimeMs, bool success)
     {
@@ -35,14 +43,14 @@ public class StatisticsService : IStatisticsService
             Success = success
         };
 
-        _requests.AddOrUpdate(
-            apiName,
-            _ => new ConcurrentBag<RequestRecord> { record },
-            (_, bag) =>
-            {
-                bag.Add(record);
-                return bag;
-            });
+        var queue = _requests.GetOrAdd(apiName, _ => new ConcurrentQueue<RequestRecord>());
+        queue.Enqueue(record);
+
+        // Trim oldest records if over the limit
+        while (queue.Count > MaxRecordsPerApi)
+        {
+            queue.TryDequeue(out _);
+        }
 
         _logger.LogDebug(
             "Recorded request for {ApiName}: {ResponseTimeMs}ms, Success: {Success}",

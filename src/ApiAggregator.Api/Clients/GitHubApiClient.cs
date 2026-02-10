@@ -53,12 +53,6 @@ public class GitHubApiClient : IApiPlugin, ISortablePlugin
         _statisticsService = statisticsService;
         _settings = settings.Value.GitHub;
         _logger = logger;
-        
-        // GitHub API requires a User-Agent header
-        if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
-        {
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "ApiAggregator/1.0");
-        }
     }
 
     public async Task<List<GitHubRepository>?> FetchRepositoriesAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)

@@ -69,10 +69,7 @@ public class NewsApiClient : IApiPlugin, ISortablePlugin
             
             _logger.LogInformation("Fetching news articles for query: {Query}", query);
             
-            var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("User-Agent", "ApiAggregator/1.0");
-
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            var response = await _httpClient.GetAsync(url, cancellationToken);
             
             response.EnsureSuccessStatusCode();
 
