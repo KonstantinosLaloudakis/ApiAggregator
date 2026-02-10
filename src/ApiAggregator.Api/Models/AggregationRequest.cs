@@ -19,4 +19,10 @@ public class AggregationRequest
     
     /// <summary>Sort order: asc or desc (default: desc)</summary>
     public string? SortOrder { get; set; }
+
+    /// <summary>Page number (default: 1)</summary>
+    public int Page { get; set; } = 1;
+
+    /// <summary>Number of items per page (default: 10)</summary>
+    public int PageSize { get; set; } = 10;
 }

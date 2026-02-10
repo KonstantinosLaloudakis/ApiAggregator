@@ -60,12 +60,25 @@ public class AggregationController : ControllerBase
         [FromQuery] string? category,
         [FromQuery] string? sortBy,
         [FromQuery] string? sortOrder,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
         // Validate that at least one search parameter is provided
         if (string.IsNullOrWhiteSpace(city) && string.IsNullOrWhiteSpace(query))
         {
             return BadRequest(new { error = "At least one of 'city' or 'query' parameters is required." });
+        }
+
+        // Validate pagination
+        if (page < 1)
+        {
+            return BadRequest(new { error = "Page number must be greater than or equal to 1." });
+        }
+
+        if (pageSize < 1 || pageSize > 100)
+        {
+            return BadRequest(new { error = "Page size must be between 1 and 100." });
         }
 
         // Validate category against registered plugins
@@ -109,8 +122,8 @@ public class AggregationController : ControllerBase
         }
 
         _logger.LogInformation(
-            "Aggregation request received - City: {City}, Query: {Query}, Category: {Category}, SortBy: {SortBy}, SortOrder: {SortOrder}",
-            city, query, category, sortBy, sortOrder);
+            "Aggregation request - City: {City}, Query: {Query}, Category: {Category}, Page: {Page}, Size: {PageSize}",
+            city, query, category, page, pageSize);
 
         var request = new AggregationRequest
         {
@@ -118,7 +131,9 @@ public class AggregationController : ControllerBase
             Query = query,
             Category = category,
             SortBy = sortBy,
-            SortOrder = sortOrder
+            SortOrder = sortOrder,
+            Page = page,
+            PageSize = pageSize
         };
 
         var result = await _aggregationService.AggregateDataAsync(request, cancellationToken);

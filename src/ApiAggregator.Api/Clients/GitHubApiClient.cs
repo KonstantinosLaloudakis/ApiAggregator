@@ -22,8 +22,8 @@ public class GitHubApiClient : IApiPlugin, ISortablePlugin
 
     public IReadOnlyList<string> SupportedSortFields => new[] { "date", "stars" };
 
-    async Task<object?> IApiPlugin.FetchDataAsync(string query, CancellationToken ct) 
-        => await FetchGitHubDataAsync(query, ct);
+    async Task<object?> IApiPlugin.FetchDataAsync(string query, int page, int pageSize, CancellationToken ct) 
+        => await FetchRepositoriesAsync(query, page, pageSize, ct);
 
     public object? SortData(object? data, string sortBy, string sortOrder)
     {
@@ -61,7 +61,7 @@ public class GitHubApiClient : IApiPlugin, ISortablePlugin
         }
     }
 
-    public async Task<List<GitHubRepository>?> FetchGitHubDataAsync(string query, CancellationToken cancellationToken = default)
+    public async Task<List<GitHubRepository>?> FetchRepositoriesAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -74,7 +74,7 @@ public class GitHubApiClient : IApiPlugin, ISortablePlugin
 
         try
         {
-            var url = $"{_settings.BaseUrl}/search/repositories?q={Uri.EscapeDataString(query)}&sort=stars&order=desc&per_page=10";
+            var url = $"{_settings.BaseUrl}/search/repositories?q={Uri.EscapeDataString(query)}&sort=stars&order=desc&page={page}&per_page={pageSize}";
             
             _logger.LogInformation("Fetching GitHub repositories for query: {Query}", query);
             

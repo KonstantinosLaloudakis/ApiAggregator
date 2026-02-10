@@ -20,7 +20,7 @@ public class WeatherApiClient : IApiPlugin
     public string Name => "OpenWeatherMap";
     public string Category => "weather";
 
-    async Task<object?> IApiPlugin.FetchDataAsync(string query, CancellationToken ct) 
+    async Task<object?> IApiPlugin.FetchDataAsync(string query, int page, int pageSize, CancellationToken ct) 
         => await FetchWeatherDataAsync(query, ct);
 
     public WeatherApiClient(

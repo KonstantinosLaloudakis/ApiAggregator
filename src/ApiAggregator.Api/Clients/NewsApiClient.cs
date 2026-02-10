@@ -22,8 +22,8 @@ public class NewsApiClient : IApiPlugin, ISortablePlugin
 
     public IReadOnlyList<string> SupportedSortFields => new[] { "date" };
 
-    async Task<object?> IApiPlugin.FetchDataAsync(string query, CancellationToken ct) 
-        => await FetchNewsDataAsync(query, ct);
+    async Task<object?> IApiPlugin.FetchDataAsync(string query, int page, int pageSize, CancellationToken ct) 
+        => await FetchNewsDataAsync(query, page, pageSize, ct);
 
     public object? SortData(object? data, string sortBy, string sortOrder)
     {
@@ -52,7 +52,7 @@ public class NewsApiClient : IApiPlugin, ISortablePlugin
         _logger = logger;
     }
 
-    public async Task<List<NewsArticle>?> FetchNewsDataAsync(string query, CancellationToken cancellationToken = default)
+    public async Task<List<NewsArticle>?> FetchNewsDataAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -65,7 +65,7 @@ public class NewsApiClient : IApiPlugin, ISortablePlugin
 
         try
         {
-            var url = $"{_settings.BaseUrl}/everything?q={Uri.EscapeDataString(query)}&apiKey={_settings.ApiKey}&pageSize=10&sortBy=publishedAt";
+            var url = $"{_settings.BaseUrl}/everything?q={Uri.EscapeDataString(query)}&apiKey={_settings.ApiKey}&page={page}&pageSize={pageSize}&sortBy=publishedAt";
             
             _logger.LogInformation("Fetching news articles for query: {Query}", query);
             

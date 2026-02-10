@@ -22,5 +22,5 @@ public interface IApiPlugin
     /// <param name="query">Search query or city name depending on API</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>API-specific data object, or null if fetch failed</returns>
-    Task<object?> FetchDataAsync(string query, CancellationToken cancellationToken = default);
+    Task<object?> FetchDataAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default);
 }
