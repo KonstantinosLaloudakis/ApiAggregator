@@ -66,7 +66,7 @@ public class AggregationService : IAggregationService
 
             try
             {
-                var cacheKey = $"{plugin.Category}:{pluginQuery}";
+                var cacheKey = $"{plugin.Category}:{pluginQuery}:page{request.Page}:size{request.PageSize}";
                 var result = await _cacheService.GetOrCreateAsync(
                     cacheKey,
                     () => plugin.FetchDataAsync(pluginQuery, request.Page, request.PageSize, cancellationToken),

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using ApiAggregator.Api.Models;
 
 namespace ApiAggregator.Api.Middleware;
 
@@ -80,17 +81,6 @@ public class ExceptionHandlingMiddleware
 }
 
 /// <summary>
-/// Standardized error response model
-/// </summary>
-public class ErrorResponse
-{
-    public string Message { get; set; } = string.Empty;
-    public int StatusCode { get; set; }
-    public string? Details { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
 /// Extension method to register the middleware
 /// </summary>
 public static class ExceptionHandlingMiddlewareExtensions
@@ -100,3 +90,4 @@ public static class ExceptionHandlingMiddlewareExtensions
         return app.UseMiddleware<ExceptionHandlingMiddleware>();
     }
 }
+

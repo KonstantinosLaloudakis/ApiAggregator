@@ -59,7 +59,7 @@ public class StatisticsController : ControllerBase
         
         if (stats == null)
         {
-            return NotFound(new { error = $"No statistics found for API: {apiName}" });
+            return NotFound(new ErrorResponse { Message = $"No statistics found for API: {apiName}", StatusCode = 404 });
         }
         
         return Ok(stats);

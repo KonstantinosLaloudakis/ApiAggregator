@@ -52,7 +52,7 @@ public class AuthController : ControllerBase
         if (!ValidateCredentials(request.Username, request.Password))
         {
             _logger.LogWarning("Invalid credentials for user: {Username}", request.Username);
-            return Unauthorized(new { error = "Invalid username or password" });
+            return Unauthorized(new ErrorResponse { Message = "Invalid username or password", StatusCode = 401 });
         }
 
         // Generate token

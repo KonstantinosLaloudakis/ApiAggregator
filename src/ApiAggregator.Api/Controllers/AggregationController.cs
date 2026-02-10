@@ -67,33 +67,34 @@ public class AggregationController : ControllerBase
         // Validate that at least one search parameter is provided
         if (string.IsNullOrWhiteSpace(city) && string.IsNullOrWhiteSpace(query))
         {
-            return BadRequest(new { error = "At least one of 'city' or 'query' parameters is required." });
+            return BadRequest(new ErrorResponse { Message = "At least one of 'city' or 'query' parameters is required.", StatusCode = 400 });
         }
 
         // Validate pagination
         if (page < 1)
         {
-            return BadRequest(new { error = "Page number must be greater than or equal to 1." });
+            return BadRequest(new ErrorResponse { Message = "Page number must be greater than or equal to 1.", StatusCode = 400 });
         }
 
         if (pageSize < 1 || pageSize > 100)
         {
-            return BadRequest(new { error = "Page size must be between 1 and 100." });
+            return BadRequest(new ErrorResponse { Message = "Page size must be between 1 and 100.", StatusCode = 400 });
         }
 
         // Validate category against registered plugins
         if (!string.IsNullOrWhiteSpace(category) && !_validCategories.Contains(category.ToLowerInvariant()))
         {
-            return BadRequest(new 
+            return BadRequest(new ErrorResponse 
             { 
-                error = $"Invalid category '{category}'. Valid categories are: {string.Join(", ", _validCategories.Order())}." 
+                Message = $"Invalid category '{category}'. Valid categories are: {string.Join(", ", _validCategories.Order())}.",
+                StatusCode = 400
             });
         }
 
         // Validate sort order
         if (!string.IsNullOrWhiteSpace(sortOrder) && !ValidSortOrders.Contains(sortOrder))
         {
-            return BadRequest(new { error = $"Invalid sortOrder '{sortOrder}'. Valid values are: asc, desc." });
+            return BadRequest(new ErrorResponse { Message = $"Invalid sortOrder '{sortOrder}'. Valid values are: asc, desc.", StatusCode = 400 });
         }
 
         // Validate sortBy against sortable plugins
@@ -107,9 +108,10 @@ public class AggregationController : ControllerBase
 
             if (!allSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
             {
-                return BadRequest(new 
+                return BadRequest(new ErrorResponse 
                 { 
-                    error = $"Invalid sortBy '{sortBy}'. Available sort fields are: {string.Join(", ", allSortFields.Order())}." 
+                    Message = $"Invalid sortBy '{sortBy}'. Available sort fields are: {string.Join(", ", allSortFields.Order())}.",
+                    StatusCode = 400
                 });
             }
         }
@@ -118,7 +120,7 @@ public class AggregationController : ControllerBase
         if (category?.Equals("weather", StringComparison.OrdinalIgnoreCase) == true 
             && string.IsNullOrWhiteSpace(city))
         {
-            return BadRequest(new { error = "The 'city' parameter is required when category is 'weather'." });
+            return BadRequest(new ErrorResponse { Message = "The 'city' parameter is required when category is 'weather'.", StatusCode = 400 });
         }
 
         _logger.LogInformation(

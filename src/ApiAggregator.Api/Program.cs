@@ -111,36 +111,16 @@ builder.Services.AddScoped<IAggregationService, AggregationService>();
 // Polly Resilience Policies
 // ============================================
 
-// Create a logger for Polly policies
-var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder.AddConsole());
-var pollyLogger = loggerFactory.CreateLogger("Polly");
-
 // Retry policy: 3 retries with exponential backoff
 var retryPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
     .WaitAndRetryAsync(3, retryAttempt => 
-        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-        onRetry: (outcome, timespan, retryAttempt, context) =>
-        {
-            pollyLogger.LogWarning(
-                "Retry {RetryAttempt} after {DelaySeconds}s delay due to: {Reason}",
-                retryAttempt, 
-                timespan.TotalSeconds,
-                outcome.Exception?.Message ?? outcome.Result?.StatusCode.ToString());
-        });
+        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
 
 // Circuit breaker: Opens after 5 failures, stays open for 30 seconds
 var circuitBreakerPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
-    .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30),
-        onBreak: (outcome, timespan) =>
-        {
-            pollyLogger.LogWarning(
-                "Circuit breaker opened for {DurationSeconds}s due to: {Reason}",
-                timespan.TotalSeconds,
-                outcome.Exception?.Message ?? outcome.Result?.StatusCode.ToString());
-        },
-        onReset: () => pollyLogger.LogInformation("Circuit breaker reset"));
+    .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
 
 // Timeout policy: 10 seconds per request
 var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
