@@ -15,8 +15,8 @@ public class StatisticsService : IStatisticsService
     private readonly ILogger<StatisticsService> _logger;
 
     // Performance bucket thresholds (in milliseconds)
-    private const double FastThreshold = 100;
-    private const double AverageThreshold = 200;
+    private const double FastThreshold = 500;
+    private const double AverageThreshold = 1000;
 
     /// <summary>
     /// Maximum number of request records kept per API.

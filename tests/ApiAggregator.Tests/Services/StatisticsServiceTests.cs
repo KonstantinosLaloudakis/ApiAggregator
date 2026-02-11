@@ -61,8 +61,8 @@ public class StatisticsServiceTests
     [Fact]
     public void RecordRequest_ShouldCategorizeAverageRequests()
     {
-        // Act - Average request (100-200ms)
-        _sut.RecordRequest("TestAPI", 150, true);
+        // Act - Average request (500-1000ms)
+        _sut.RecordRequest("TestAPI", 600, true);
 
         // Assert
         var stats = _sut.GetApiStatistics("TestAPI");
@@ -75,8 +75,8 @@ public class StatisticsServiceTests
     [Fact]
     public void RecordRequest_ShouldCategorizeSlowRequests()
     {
-        // Act - Slow request (> 200ms)
-        _sut.RecordRequest("TestAPI", 300, true);
+        // Act - Slow request (> 1000ms)
+        _sut.RecordRequest("TestAPI", 1200, true);
 
         // Assert
         var stats = _sut.GetApiStatistics("TestAPI");
