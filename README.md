@@ -44,14 +44,16 @@ Create `src/ApiAggregator.Api/appsettings.Development.json`:
 {
   "ApiSettings": {
     "OpenWeatherMap": {
-      "ApiKey": "paste-your-openweathermap-key-here"
+      "ApiKey": "<key-from-email>"
     },
     "NewsApi": {
-      "ApiKey": "paste-your-newsapi-key-here"
+      "ApiKey": "<key-from-email>"
     }
   }
 }
 ```
+
+> **Note:** The API keys will be valid for the duration of the review.
 
 > **Note:** This file is gitignored so your keys stay private.
 

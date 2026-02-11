@@ -134,4 +134,81 @@ public class AggregationServiceTests
         Assert.True(response.Data.ContainsKey("news"));
         Assert.True(response.Data.ContainsKey("github"));
     }
+    [Fact]
+    public async Task AggregateDataAsync_ShouldAggregateDataFromAllPlugins()
+    {
+        // Arrange
+        var weatherPlugin = new Mock<IApiPlugin>();
+        weatherPlugin.Setup(p => p.Category).Returns("weather");
+        weatherPlugin.Setup(p => p.Name).Returns("WeatherAPI");
+        weatherPlugin.Setup(p => p.FetchDataAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeatherData { City = "London", Temperature = 15 });
+
+        var newsPlugin = new Mock<IApiPlugin>();
+        newsPlugin.Setup(p => p.Category).Returns("news");
+        newsPlugin.Setup(p => p.Name).Returns("NewsAPI");
+        newsPlugin.Setup(p => p.FetchDataAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<NewsArticle> { new() { Title = "Test News" } });
+
+        var plugins = new List<IApiPlugin> { weatherPlugin.Object, newsPlugin.Object };
+        
+        // Mock cache to return the data directly (simulating cache miss -> fetch)
+        _cacheServiceMock
+            .Setup(c => c.GetOrCreateAsync(It.IsAny<string>(), It.IsAny<Func<Task<object?>>>(), It.IsAny<CancellationToken>()))
+            .Returns<string, Func<Task<object?>>, CancellationToken>((key, factory, ct) => factory());
+
+        var service = new AggregationService(plugins, _cacheServiceMock.Object, _loggerMock.Object);
+        var request = new AggregationRequest { City = "London", Query = "tech" };
+
+        // Act
+        var response = await service.AggregateDataAsync(request);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.True(response.Data.ContainsKey("weather"));
+        Assert.True(response.Data.ContainsKey("news"));
+        
+        var weather = response.Data["weather"] as WeatherData;
+        Assert.Equal(15, weather.Temperature);
+
+        var news = response.Data["news"] as List<NewsArticle>;
+        Assert.Single(news);
+    }
+
+    [Fact]
+    public async Task AggregateDataAsync_ShouldHandlePluginFailuresGracefully()
+    {
+        // Arrange
+        var weatherPlugin = new Mock<IApiPlugin>();
+        weatherPlugin.Setup(p => p.Category).Returns("weather");
+        weatherPlugin.Setup(p => p.Name).Returns("WeatherAPI");
+        weatherPlugin.Setup(p => p.FetchDataAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("API Error"));
+
+        var newsPlugin = new Mock<IApiPlugin>();
+        newsPlugin.Setup(p => p.Category).Returns("news");
+        newsPlugin.Setup(p => p.Name).Returns("NewsAPI");
+        newsPlugin.Setup(p => p.FetchDataAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<NewsArticle> { new() { Title = "Test News" } });
+
+        var plugins = new List<IApiPlugin> { weatherPlugin.Object, newsPlugin.Object };
+
+        _cacheServiceMock
+            .Setup(c => c.GetOrCreateAsync(It.IsAny<string>(), It.IsAny<Func<Task<object?>>>(), It.IsAny<CancellationToken>()))
+            .Returns<string, Func<Task<object?>>, CancellationToken>((key, factory, ct) => factory());
+
+        var service = new AggregationService(plugins, _cacheServiceMock.Object, _loggerMock.Object);
+        var request = new AggregationRequest { City = "London", Query = "tech" };
+
+        // Act
+        var serviceResponse = await service.AggregateDataAsync(request);
+
+        // Assert
+        Assert.NotNull(serviceResponse);
+        // News should succeed
+        Assert.True(serviceResponse.Data.ContainsKey("news"));
+        // Weather should be missing from data but present in errors
+        Assert.False(serviceResponse.Data.ContainsKey("weather"));
+        Assert.Contains(serviceResponse.Errors, e => e.Contains("Failed to fetch from WeatherAPI"));
+    }
 }

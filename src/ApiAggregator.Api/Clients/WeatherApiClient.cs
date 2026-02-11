@@ -43,6 +43,12 @@ public class WeatherApiClient : IApiPlugin
             return null;
         }
 
+        if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+        {
+            _logger.LogWarning("OpenWeatherMap Key is missing. Skipping fetch.");
+            return null;
+        }
+
         var stopwatch = Stopwatch.StartNew();
         var success = false;
 

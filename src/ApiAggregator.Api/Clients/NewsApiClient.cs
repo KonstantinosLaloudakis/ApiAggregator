@@ -60,6 +60,12 @@ public class NewsApiClient : IApiPlugin, ISortablePlugin
             return new List<NewsArticle>();
         }
 
+        if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+        {
+            _logger.LogWarning("NewsAPI Key is missing. Skipping fetch.");
+            return new List<NewsArticle>();
+        }
+
         var stopwatch = Stopwatch.StartNew();
         var success = false;
 
